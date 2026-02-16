@@ -25,7 +25,6 @@ adding a duplicate.
    - Deduplicate facts — don't repeat what's already there.
    - Keep each section under a top-level `# Heading`.
 3. **Write** the full updated content back using `write_memory_file`.
-4. **Transfer back** to the parent agent and briefly confirm what you saved.
 
 Guidelines:
 - Be extremely concise. One-liners are better than paragraphs.

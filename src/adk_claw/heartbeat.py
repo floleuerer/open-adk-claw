@@ -103,6 +103,15 @@ class HeartbeatScheduler:
         self._last_fired: dict[str, datetime] = {}
         logger.info("Heartbeat scheduler started (interval: %.0fs)", self._check_interval)
 
+        # Seed time-specific schedules so they don't fire immediately on startup.
+        # Interval-based schedules ("every N hours/minutes") are left unseeded so
+        # they fire on the first check as before.
+        now = datetime.now(timezone.utc)
+        for f in self._heartbeat_files:
+            for task in _parse_heartbeat_md(f):
+                if re.match(r"every\s+day\s+at\s+\d{1,2}:\d{2}", task.schedule.lower().strip()):
+                    self._last_fired[task.schedule] = now
+
         while self._running:
             try:
                 self._tasks = []

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import signal
 from pathlib import Path
 
 from adk_claw.agent import create_runner, create_curator_runner
@@ -134,15 +135,22 @@ async def main() -> None:
     dispatcher_task = asyncio.create_task(dispatcher.run())
     heartbeat_task = asyncio.create_task(heartbeat.run())
 
+    # Use an event so both SIGTERM (docker stop) and SIGINT (Ctrl-C) trigger
+    # a graceful shutdown that reaches the finally block.
+    stop_event = asyncio.Event()
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(sig, stop_event.set)
+
     try:
-        # Keep running until interrupted
-        await asyncio.Event().wait()
-    except (KeyboardInterrupt, asyncio.CancelledError):
+        await stop_event.wait()
         logger.info("Shutting down...")
     finally:
         heartbeat.stop()
         heartbeat_task.cancel()
         dispatcher_task.cancel()
+        # Curate and flush all active sessions before exit
+        await dispatcher.shutdown()
         if gmail_channel:
             await gmail_channel.stop()
         await telegram.stop()

@@ -245,3 +245,47 @@ class Dispatcher:
             self._sessions[chat_id] = new_session.id
             del self._last_activity[chat_id]
             logger.info("--- [ROTATE] Finished for chat %s (new session: %s) ---", chat_id, new_session.id)
+
+    async def shutdown(self) -> None:
+        """Curate and flush all active sessions before the process exits."""
+        if not self._sessions:
+            logger.info("No active sessions to curate on shutdown")
+            return
+
+        logger.info("--- [SHUTDOWN] Curating %d active session(s) ---", len(self._sessions))
+        for chat_id in list(self._sessions):
+            session_id = self._sessions.get(chat_id)
+            if session_id is None:
+                continue
+
+            # Run the curator against each active session
+            if self._curator_runner is not None:
+                curation_content = types.Content(
+                    role="user",
+                    parts=[types.Part(text=_CURATION_PROMPT)],
+                )
+                try:
+                    async for _event in self._curator_runner.run_async(
+                        user_id=chat_id,
+                        session_id=session_id,
+                        new_message=curation_content,
+                    ):
+                        pass
+                    logger.info("[SHUTDOWN] Curated session for chat %s", chat_id)
+                except Exception:
+                    logger.exception("[SHUTDOWN] Error curating chat %s", chat_id)
+
+            # Flush session to daily log
+            try:
+                session = await self._runner.session_service.get_session(
+                    app_name=self._settings.app_name,
+                    user_id=chat_id,
+                    session_id=session_id,
+                )
+                if session:
+                    await self._memory_service.add_session_to_memory(session)
+                    logger.info("[SHUTDOWN] Flushed session to daily log for chat %s", chat_id)
+            except Exception:
+                logger.exception("[SHUTDOWN] Error flushing session for chat %s", chat_id)
+
+        logger.info("--- [SHUTDOWN] Memory curation complete ---")
