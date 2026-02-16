@@ -15,10 +15,10 @@ _NO_SCREENSHOT_ACTIONS = frozenset({"screenshot", "extract_text", "close"})
 
 
 def _take_screenshot(session_id: str, action: str) -> tuple[str | None, bytes | None]:
-    """Take a screenshot, save it to disk for debugging, and return raw bytes.
+    """Take a screenshot, save it to disk for debugging, and return JPEG bytes.
 
     Returns:
-        A tuple of (saved_file_path, png_bytes). Either may be None on failure.
+        A tuple of (saved_file_path, jpeg_bytes). Either may be None on failure.
     """
     ctx = get_context()
     try:
@@ -32,18 +32,18 @@ def _take_screenshot(session_id: str, action: str) -> tuple[str | None, bytes | 
         content = data.get("content", "")
         if not content:
             return None, None
-        png_bytes = base64.b64decode(content)
+        img_bytes = base64.b64decode(content)
 
         # Save to disk for debugging
         saved_path: str | None = None
         if ctx.screenshots_dir:
             ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-            filepath = ctx.screenshots_dir / f"{ts}_{action}.png"
-            filepath.write_bytes(png_bytes)
+            filepath = ctx.screenshots_dir / f"{ts}_{action}.jpg"
+            filepath.write_bytes(img_bytes)
             logger.info("Saved browser screenshot: %s", filepath)
             saved_path = str(filepath)
 
-        return saved_path, png_bytes
+        return saved_path, img_bytes
     except Exception:
         logger.warning("Failed to take screenshot after %s", action, exc_info=True)
         return None, None
@@ -59,7 +59,7 @@ def _result_with_screenshot(
         return result
     return [
         types.Part.from_text(text=str(result)),
-        types.Part.from_bytes(data=png_bytes, mime_type="image/png"),
+        types.Part.from_bytes(data=png_bytes, mime_type="image/jpeg"),
     ]
 
 
@@ -141,15 +141,15 @@ def browse_webpage(
         if action == "screenshot":
             content = result.get("content", "")
             if content:
-                png_bytes = base64.b64decode(content)
+                img_bytes = base64.b64decode(content)
                 # Save to disk for debugging
                 saved_path: str | None = None
                 if ctx.screenshots_dir:
                     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-                    filepath = ctx.screenshots_dir / f"{ts}_browse.png"
-                    filepath.write_bytes(png_bytes)
+                    filepath = ctx.screenshots_dir / f"{ts}_browse.jpg"
+                    filepath.write_bytes(img_bytes)
                     saved_path = str(filepath)
-                return _result_with_screenshot(result, png_bytes, saved_path)
+                return _result_with_screenshot(result, img_bytes, saved_path)
 
         return result
     except httpx.HTTPError as e:

@@ -2,18 +2,25 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import io
 import time
 import uuid
 from typing import Literal
 
 from fastapi import FastAPI
+from PIL import Image
 from playwright.async_api import Page, async_playwright
+from playwright_stealth import Stealth
 from pydantic import BaseModel
+
+SCREENSHOT_MAX_WIDTH = 768
+SCREENSHOT_JPEG_QUALITY = 80
 
 app = FastAPI(title="Browser Service")
 
 _playwright = None
 _browser = None
+_stealth = Stealth()
 
 _sessions: dict[str, dict] = {}  # session_id -> {"page": Page, "last_used": float}
 _sessions_lock = asyncio.Lock()
@@ -42,35 +49,62 @@ async def _cleanup_expired_sessions():
                 del _sessions[sid]
 
 
-_STEALTH_JS = """
-// Override navigator.webdriver
-Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-
-// Override navigator.plugins to look real
-Object.defineProperty(navigator, 'plugins', {
-    get: () => [1, 2, 3, 4, 5],
-});
-
-// Override navigator.languages
-Object.defineProperty(navigator, 'languages', {
-    get: () => ['en-US', 'en'],
-});
-
-// Pass Chrome detection
-window.chrome = { runtime: {} };
-
-// Override permissions query
-const originalQuery = window.navigator.permissions.query;
-window.navigator.permissions.query = (parameters) =>
-    parameters.name === 'notifications'
-        ? Promise.resolve({ state: Notification.permission })
-        : originalQuery(parameters);
-"""
-
 _USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
 )
+
+# Extra evasions on top of playwright-stealth
+_EXTRA_STEALTH_JS = """
+// Ensure iframe contentWindow doesn't leak
+try {
+    const iframeProto = HTMLIFrameElement.prototype;
+    const origGetter = Object.getOwnPropertyDescriptor(iframeProto, 'contentWindow').get;
+    Object.defineProperty(iframeProto, 'contentWindow', {
+        get: function() {
+            const win = origGetter.call(this);
+            if (win) {
+                try { Object.defineProperty(win, 'chrome', { value: window.chrome }); } catch(e) {}
+            }
+            return win;
+        }
+    });
+} catch(e) {}
+
+// Prevent detection via outerWidth/outerHeight being 0 in headless
+if (window.outerWidth === 0) {
+    Object.defineProperty(window, 'outerWidth', { get: () => window.innerWidth });
+}
+if (window.outerHeight === 0) {
+    Object.defineProperty(window, 'outerHeight', { get: () => window.innerHeight + 85 });
+}
+
+// navigator.connection (missing in headless)
+if (!navigator.connection) {
+    Object.defineProperty(navigator, 'connection', {
+        get: () => ({
+            effectiveType: '4g',
+            rtt: 50,
+            downlink: 10,
+            saveData: false,
+        }),
+    });
+}
+"""
+
+
+def _compress_screenshot(png_bytes: bytes) -> bytes:
+    """Resize and convert a PNG screenshot to JPEG to reduce size."""
+    img = Image.open(io.BytesIO(png_bytes))
+    w, h = img.size
+    if w > SCREENSHOT_MAX_WIDTH:
+        ratio = SCREENSHOT_MAX_WIDTH / w
+        img = img.resize((SCREENSHOT_MAX_WIDTH, int(h * ratio)), Image.LANCZOS)
+    if img.mode == "RGBA":
+        img = img.convert("RGB")
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=SCREENSHOT_JPEG_QUALITY, optimize=True)
+    return buf.getvalue()
 
 
 async def _new_stealth_page() -> Page:
@@ -80,8 +114,10 @@ async def _new_stealth_page() -> Page:
         viewport={"width": 1920, "height": 1080},
         locale="en-US",
         timezone_id="America/New_York",
+        color_scheme="light",
     )
-    await context.add_init_script(_STEALTH_JS)
+    await _stealth.apply_stealth_async(context)
+    await context.add_init_script(_EXTRA_STEALTH_JS)
     page = await context.new_page()
     return page
 
@@ -97,6 +133,10 @@ async def startup():
             "--disable-dev-shm-usage",
             "--no-first-run",
             "--no-default-browser-check",
+            "--disable-infobars",
+            "--window-size=1920,1080",
+            "--start-maximized",
+            "--disable-extensions",
         ],
     )
     _cleanup_task = asyncio.create_task(_cleanup_expired_sessions())
@@ -159,7 +199,8 @@ async def browse(req: BrowseRequest) -> BrowseResponse:
                     screenshot = await page.screenshot(full_page=False)
             else:
                 screenshot = await page.screenshot(full_page=False)
-            content = base64.b64encode(screenshot).decode("utf-8")
+            compressed = _compress_screenshot(screenshot)
+            content = base64.b64encode(compressed).decode("utf-8")
         else:
             if req.selector:
                 element = await page.query_selector(req.selector)
@@ -281,9 +322,10 @@ async def session(req: SessionRequest) -> SessionResponse:
                     screenshot = await page.screenshot(full_page=False)
             else:
                 screenshot = await page.screenshot(full_page=False)
+            compressed = _compress_screenshot(screenshot)
             return SessionResponse(
                 session_id=sid,
-                content=base64.b64encode(screenshot).decode("utf-8"),
+                content=base64.b64encode(compressed).decode("utf-8"),
                 title=await page.title(),
                 url=page.url,
             )

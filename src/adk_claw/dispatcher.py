@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Callable, Awaitable
 
 from google.adk.runners import Runner
+from google.adk.agents.run_config import RunConfig
 from google.genai import types
 
 from adk_claw.config import Settings
@@ -147,6 +148,7 @@ class Dispatcher:
                     user_id=chat_id,
                     session_id=session_id,
                     new_message=content,
+                    run_config=RunConfig(max_llm_calls=500),
                 ):
                     if hasattr(event, "content") and event.content:
                         ev_parts = getattr(event.content, "parts", [])

@@ -16,18 +16,18 @@ def create_heartbeat_agent() -> LlmAgent:
         name="heartbeat_manager",
         description=(
             "Manages the agent's own scheduled tasks. "
-            "Transfer here to add, list, or remove recurring tasks."
+            "Use this to add, list, or remove recurring tasks."
         ),
         model=Gemini(
             model="gemini-3-flash-preview",
-            retry_options=types.HttpRetryOptions(initial_delay=1, attempts=5),
+            retry_options=types.HttpRetryOptions(initial_delay=2, attempts=5),
         ),
         instruction=(
             "You manage scheduled heartbeat tasks. "
             "Help the user add, list, or remove tasks. "
             "Supported schedule formats: 'Every N hours', 'Every N minutes', "
             "'Every day at HH:MM'. "
-            "After completing the request, transfer back to the parent agent."
+            "Complete the request and return the result."
         ),
         tools=[add_scheduled_task, list_scheduled_tasks, remove_scheduled_task],
     )

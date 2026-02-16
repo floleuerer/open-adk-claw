@@ -7,6 +7,7 @@ from pathlib import Path
 from google.adk.agents import LlmAgent
 from google.adk.models import Gemini
 from google.adk.plugins.multimodal_tool_results_plugin import MultimodalToolResultsPlugin
+from google.adk.tools.agent_tool import AgentTool
 from google.genai import types
 
 from adk_claw.plugins.logging_plugin import LoggingPlugin
@@ -32,20 +33,21 @@ from adk_claw.skills.toolset import SkillToolset
 logger = logging.getLogger(__name__)
 
 
-def _build_sub_agents(settings: Settings, skill_toolset: SkillToolset) -> list:
-    agents = [
-        create_heartbeat_agent(),
-        create_browser_agent(),
+def _build_agent_tools(settings: Settings, skill_toolset: SkillToolset) -> list:
+    agent_tools = [
+        AgentTool(agent=create_heartbeat_agent()),
+        AgentTool(agent=create_browser_agent()),
     ]
-    
+
     # Load dynamic agents from workspace/agents/
     dynamic_agents_dir = settings.base_dir / "agents"
-    agents.extend(load_dynamic_agents(dynamic_agents_dir, skill_toolset))
+    for agent in load_dynamic_agents(dynamic_agents_dir, skill_toolset):
+        agent_tools.append(AgentTool(agent=agent))
 
     if settings.gmail_credentials_file:
-        agents.append(create_email_calendar_agent(settings))
-        logger.info("Email/calendar sub-agent enabled")
-    return agents
+        agent_tools.append(AgentTool(agent=create_email_calendar_agent(settings)))
+        logger.info("Email/calendar agent tool enabled")
+    return agent_tools
 
 
 def _load_rules(base_dir: Path) -> str:
@@ -60,7 +62,7 @@ def _load_long_term_memory(base_dir: Path) -> str:
     if memory_file.exists():
         content = memory_file.read_text(encoding="utf-8").strip()
         if content:
-            return f"\n\n## Long-term Memory\n{content}"
+            return f"\n\n## Profile\n{content}"
     return ""
 
 
@@ -93,8 +95,9 @@ def create_agent(settings: Settings) -> LlmAgent:
     return LlmAgent(
         name=settings.app_name,
         model=Gemini(
-            model=settings.model_name,
-            retry_options=types.HttpRetryOptions(initial_delay=1, attempts=5),
+            #model=settings.model_name,
+            model="gemini-3-pro-preview",
+            retry_options=types.HttpRetryOptions(initial_delay=2, attempts=5),
         ),
         instruction=instruction,
         tools=[
@@ -107,9 +110,9 @@ def create_agent(settings: Settings) -> LlmAgent:
             create_dynamic_agent,
             list_dynamic_agents,
             skill_toolset,
+            *_build_agent_tools(settings, skill_toolset),
         ],
         before_tool_callback=execution_guardrail,
-        sub_agents=_build_sub_agents(settings, skill_toolset),
     )
 
 

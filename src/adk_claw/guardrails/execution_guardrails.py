@@ -97,7 +97,7 @@ async def _judge_code(model: str, tool_name: str, code: str) -> Optional[str]:
             contents=prompt,
             config=types.GenerateContentConfig(
                 http_options=types.HttpOptions(
-                    retry_options=types.HttpRetryOptions(initial_delay=1, attempts=5)
+                    retry_options=types.HttpRetryOptions(initial_delay=2, attempts=5)
                 )
             ),
         )

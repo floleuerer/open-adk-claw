@@ -69,7 +69,7 @@ def load_dynamic_agents(agents_dir: Path, skill_toolset: SkillToolset) -> list[L
                 instruction=instruction,
                 model=Gemini(
                     model=model,
-                    retry_options=types.HttpRetryOptions(initial_delay=1, attempts=5),
+                    retry_options=types.HttpRetryOptions(initial_delay=2, attempts=5),
                 ),
                 tools=tools,
             )

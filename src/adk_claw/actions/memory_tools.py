@@ -4,7 +4,7 @@ from adk_claw.context import get_context
 
 
 async def search_memory(query: str) -> dict:
-    """Search long-term memory for relevant past conversations and saved notes.
+    """Search memory for relevant past conversations and saved notes.
 
     Args:
         query: The search query describing what you're looking for.

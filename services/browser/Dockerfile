@@ -1,9 +1,8 @@
-FROM mcr.microsoft.com/playwright/python:v1.49.0-noble
+FROM mcr.microsoft.com/playwright/python:v1.58.0-noble
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir fastapi uvicorn playwright
-RUN playwright install chromium
+RUN pip install --no-cache-dir fastapi uvicorn playwright playwright-stealth Pillow
 
 COPY main.py .
 

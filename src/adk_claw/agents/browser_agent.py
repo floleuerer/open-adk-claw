@@ -12,11 +12,11 @@ def create_browser_agent() -> LlmAgent:
         name="web_browser",
         description=(
             "Browses the web to find information, interact with websites, "
-            "or take screenshots. Transfer here for any web-based tasks."
+            "or take screenshots. Use this for any web-based tasks."
         ),
         model=Gemini(
             model="gemini-3-flash-preview",
-            retry_options=types.HttpRetryOptions(initial_delay=1, attempts=5),
+            retry_options=types.HttpRetryOptions(initial_delay=2, attempts=5),
         ),
         instruction=(
             "You are a web browsing specialist. "
@@ -27,7 +27,7 @@ def create_browser_agent() -> LlmAgent:
             "When using 'browser_interact', you will receive a session_id. "
             "Reuse this session_id for subsequent actions in the same interaction. "
             "After finding the information the user requested or completing the interaction, "
-            "summarize your findings and transfer back to the parent agent."
+            "summarize your findings and return the result."
         ),
         tools=[browser_interact, browse_webpage],
     )

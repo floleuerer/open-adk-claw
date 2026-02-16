@@ -44,7 +44,7 @@ def create_memory_curator_agent() -> LlmAgent:
         ),
         model=Gemini(
             model="gemini-3-flash-preview",
-            retry_options=types.HttpRetryOptions(initial_delay=1, attempts=5),
+            retry_options=types.HttpRetryOptions(initial_delay=2, attempts=5),
         ),
         instruction=CURATOR_INSTRUCTION,
         tools=[read_memory_file, write_memory_file],

@@ -34,17 +34,17 @@ def create_email_calendar_agent(settings: Settings) -> LlmAgent:
         name="email_calendar_manager",
         description=(
             "Manages email and calendar. "
-            "Transfer here to send emails, search inbox, or manage calendar events."
+            "Use this to send emails, search inbox, or manage calendar events."
         ),
         model=Gemini(
             model="gemini-3-flash-preview",
-            retry_options=types.HttpRetryOptions(initial_delay=1, attempts=5),
+            retry_options=types.HttpRetryOptions(initial_delay=2, attempts=5),
         ),
         instruction=(
             "You manage email and Google Calendar. "
             "Help the user send emails, search their inbox, read emails, "
             "and create/update/delete calendar events. "
-            "After completing the request, transfer back to the parent agent."
+            "Complete the request and return the result."
         ),
         tools=[
             send_email,
