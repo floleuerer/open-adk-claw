@@ -1,0 +1,64 @@
+services:
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    volumes:
+      - ./workspace:/app/workspace
+      - ./secrets:/secrets
+    networks:
+      - external
+      - sandbox_net
+    depends_on:
+      browser:
+        condition: service_healthy
+      sandbox:
+        condition: service_healthy
+    restart: unless-stopped
+
+  browser:
+    build:
+      context: ./services/browser
+      dockerfile: Dockerfile
+    networks:
+      - external
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  sandbox:
+    build:
+      context: ./services/sandbox
+      dockerfile: Dockerfile
+    volumes:
+      - ./workspace/files:/data/files
+      - ./workspace/skills:/data/skills:ro
+    networks:
+      - external
+      - sandbox_net
+    read_only: true
+    tmpfs:
+      - /tmp:size=256M
+    mem_limit: 512m
+    cpus: 1.0
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+networks:
+  external:
+    driver: bridge
+  sandbox_net:
+    driver: bridge
+    internal: true

@@ -1,0 +1,3 @@
+services:
+  agent:
+    platform: linux/amd64

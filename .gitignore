@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# Environment & secrets
+.env
+secrets/
+missing-features/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.claude/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Workspace runtime data
+workspace/agents/
+workspace/memory/
+workspace/files/
+workspace/skills/
+workspace/browser_screenshots/
+workspace/CUSTOM_HEARTBEAT.md
+
+# OS
+.DS_Store

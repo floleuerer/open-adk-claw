@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 120" fill="none">
+  <defs>
+    <linearGradient id="lobster-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f7971e"/>
+      <stop offset="100%" style="stop-color:#ffd200"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Lobster icon -->
+  <g transform="translate(105, 12) scale(0.52)" fill="url(#lobster-grad)">
+    <!-- Body -->
+    <ellipse cx="90" cy="105" rx="28" ry="38"/>
+    <!-- Tail segments -->
+    <ellipse cx="90" cy="150" rx="22" ry="12"/>
+    <ellipse cx="90" cy="168" rx="18" ry="10"/>
+    <ellipse cx="90" cy="182" rx="14" ry="8"/>
+    <!-- Tail fan -->
+    <ellipse cx="78" cy="195" rx="10" ry="6" transform="rotate(-15 78 195)"/>
+    <ellipse cx="90" cy="198" rx="9" ry="6"/>
+    <ellipse cx="102" cy="195" rx="10" ry="6" transform="rotate(15 102 195)"/>
+    <!-- Head -->
+    <ellipse cx="90" cy="68" rx="20" ry="16"/>
+    <!-- Eyes -->
+    <circle cx="76" cy="56" r="5"/>
+    <circle cx="104" cy="56" r="5"/>
+    <!-- Eye stalks -->
+    <rect x="74" y="48" width="4" height="10" rx="2"/>
+    <rect x="102" y="48" width="4" height="10" rx="2"/>
+    <!-- Antennae -->
+    <path d="M 82 55 Q 60 20 40 5" stroke="url(#lobster-grad)" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M 98 55 Q 120 20 140 5" stroke="url(#lobster-grad)" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <!-- Small antennae -->
+    <path d="M 84 58 Q 68 38 55 30" stroke="url(#lobster-grad)" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <path d="M 96 58 Q 112 38 125 30" stroke="url(#lobster-grad)" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <!-- Left claw arm -->
+    <path d="M 62 85 Q 30 70 15 55" stroke="url(#lobster-grad)" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <!-- Left claw pincer -->
+    <path d="M 15 55 Q 5 42 0 30" stroke="url(#lobster-grad)" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M 15 55 Q 22 40 18 28" stroke="url(#lobster-grad)" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <!-- Right claw arm -->
+    <path d="M 118 85 Q 150 70 165 55" stroke="url(#lobster-grad)" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <!-- Right claw pincer -->
+    <path d="M 165 55 Q 175 42 180 30" stroke="url(#lobster-grad)" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M 165 55 Q 158 40 162 28" stroke="url(#lobster-grad)" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <!-- Legs left -->
+    <path d="M 65 95 Q 45 100 35 108" stroke="url(#lobster-grad)" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M 63 108 Q 42 115 32 125" stroke="url(#lobster-grad)" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M 64 120 Q 44 130 34 142" stroke="url(#lobster-grad)" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <!-- Legs right -->
+    <path d="M 115 95 Q 135 100 145 108" stroke="url(#lobster-grad)" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M 117 108 Q 138 115 148 125" stroke="url(#lobster-grad)" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M 116 120 Q 136 130 146 142" stroke="url(#lobster-grad)" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- Title -->
+  <text x="210" y="62" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" fill="#e8e6f0" letter-spacing="-1">
+    open-adk-claw
+  </text>
+
+  <!-- Tagline -->
+  <text x="212" y="89" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="13" fill="#8884a8" letter-spacing="2.5">
+    SELF-EXTENDING AUTONOMOUS AI AGENT
+  </text>
+</svg>
